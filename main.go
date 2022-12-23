@@ -2,26 +2,49 @@ package main
 
 import (
 	"fmt"
-	"time"
+	"sync"
 )
 
-func cutIngredient() {
-	fmt.Println("start cutting ingredients")
-	
-	time.Sleep(1 * time.Second)
+var i int
+var mu sync.Mutex
+// 待ち合わせ
+var wg sync.WaitGroup
 
-	fmt.Println("finish cutting ingredient!")
+func MyFunc1() {
+	// 内部カウンタを-1
+	defer wg.Done()
+
+	fmt.Println("MyFunc1 start")	
+	
+	mu.Lock()
+	i += 1
+	mu.Unlock()
+	
+	fmt.Println("MyFunc1 finish")
 }
 
-func boilWater() {
-	fmt.Println("start boiling water")
+func MyFunc2() {
+	// 内部カウンタを-1
+	defer wg.Done()
 
-	time.Sleep(2 * time.Second)
+	fmt.Println("MyFunc2 start")
 
-	fmt.Println("The water has boiled!!")
+	mu.Lock()
+	i -= 1
+	mu.Unlock()
+
+	fmt.Println("MyFunc2 finish")
 }
 
 func main() {
-	go cutIngredient()
-	boilWater()
+	i = 0
+	
+	// 内部カウンタを+2にする
+	wg.Add(2)
+	go MyFunc1()
+	go MyFunc2()
+
+	// 内部カウンタが0になるまで待機
+	wg.Wait()
+	fmt.Printf("final result: i = %d\n", i)
 }
